@@ -1,8 +1,3 @@
-// Описаний у документації
-import SimpleLightbox from 'simplelightbox';
-// Додатковий імпорт стилів
-import 'simplelightbox/dist/simple-lightbox.min.css';
-
 export default function renderGallery(requestedHits, galleryNode) {
   let markup = '';
 
@@ -45,11 +40,4 @@ export default function renderGallery(requestedHits, galleryNode) {
   );
 
   galleryNode.innerHTML = markup;
-
-  const galleryLightbox = new SimpleLightbox('.gallery a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
-
-  galleryLightbox.refresh();
 }

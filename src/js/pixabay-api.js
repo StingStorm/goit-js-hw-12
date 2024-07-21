@@ -23,12 +23,15 @@ export default function fetchingGallery() {
 
     const { hits, totalHits } = response.data;
 
-    return { hits, totalHits, nextPageNumber };
+    const pageLimit = Math.ceil(totalHits / hitsPerPage);
+    const isLastPage = nextPageNumber > pageLimit;
+
+    return { hits, isLastPage };
   }
 
   function resetNextPageNum() {
     nextPageNumber = 1;
   }
 
-  return { fetchingGalleryPage, resetNextPageNum, hitsPerPage };
+  return { fetchingGalleryPage, resetNextPageNum };
 }

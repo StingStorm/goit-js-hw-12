@@ -14,8 +14,7 @@ const searchForm = document.querySelector('.search-form');
 const galleryList = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('button[data-load]');
 
-const { fetchingGalleryPage, resetNextPageNum, hitsPerPage } =
-  fetchingGallery();
+const { fetchingGalleryPage, resetNextPageNum } = fetchingGallery();
 let userRequest = '';
 
 const galleryLightbox = new SimpleLightbox('.gallery a', {
@@ -38,7 +37,9 @@ searchForm.addEventListener('submit', async event => {
   hideLoadMoreBtn();
 
   try {
-    const { hits: firstPage } = await fetchingGalleryPage(userRequest);
+    const { hits: firstPage, isLastPage } = await fetchingGalleryPage(
+      userRequest
+    );
 
     if (!firstPage.length) {
       iziToast.error({
@@ -52,13 +53,11 @@ searchForm.addEventListener('submit', async event => {
       return;
     }
 
-    setTimeout(() => {
-      renderGallery(firstPage, galleryList);
-      galleryLightbox.refresh();
+    renderGallery(firstPage, galleryList);
+    galleryLightbox.refresh();
 
-      removeLoader();
-      showLoadMoreBtn();
-    }, 1000);
+    removeLoader();
+    showLoadMoreBtn(isLastPage);
   } catch (error) {
     console.error(error);
 
@@ -77,39 +76,22 @@ loadMoreBtn.addEventListener('click', async () => {
   showLoader(galleryList);
   hideLoadMoreBtn();
 
+  const { height: itemHeight } = document
+    .querySelector('.gallery-item')
+    .getBoundingClientRect();
+
   try {
-    const {
-      hits: nextPage,
-      totalHits,
-      nextPageNumber,
-    } = await fetchingGalleryPage(userRequest);
+    const { hits: nextPage, isLastPage } = await fetchingGalleryPage(
+      userRequest
+    );
 
-    const currentPage = nextPageNumber - 1;
-    const totalPages = Math.ceil(totalHits / hitsPerPage);
+    removeLoader();
 
-    if (currentPage > totalPages) {
-      iziToast.error({
-        message: "We're sorry, but you've reached the end of search results.",
-        position: 'topRight',
-      });
-      removeLoader();
+    renderGallery(nextPage, galleryList);
+    galleryLightbox.refresh();
 
-      return;
-    }
-
-    const { height: itemHeight } = document
-      .querySelector('.gallery-item')
-      .getBoundingClientRect();
-
-    setTimeout(() => {
-      removeLoader();
-
-      renderGallery(nextPage, galleryList);
-      galleryLightbox.refresh();
-
-      showLoadMoreBtn();
-      window.scrollBy(0, itemHeight * 2);
-    }, 500);
+    window.scrollBy(0, itemHeight * 2);
+    showLoadMoreBtn(isLastPage);
   } catch (error) {
     console.error(error);
 
@@ -135,9 +117,16 @@ function removeLoader(loaderNode = document.querySelector('.loader')) {
   }
 }
 
-function showLoadMoreBtn() {
+function showLoadMoreBtn(isLastPage) {
   if (loadMoreBtn.classList.contains('visually-hidden')) {
-    loadMoreBtn.classList.remove('visually-hidden');
+    if (isLastPage) {
+      iziToast.info({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    } else {
+      loadMoreBtn.classList.remove('visually-hidden');
+    }
   }
 }
 
